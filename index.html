@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klbko pokoja — mindfulness hra pre deti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky1:#DCEAF4; --sky2:#F0EBF9;
+  --ink:#33405A; --ink-soft:#5C6B85;
+  --yarn:#E8707E; --yarn-dark:#C9556A;
+  --wool:#FCF4E3; --wool-line:#E6CFA4;
+  --calm:#7FBF96; --calm-dark:#4E9A6E;
+  --star:#F4C95D;
+  --card:#FFFFFF;
+  --shadow:0 6px 18px rgba(51,64,90,.12);
+  --radius:22px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  font-family:'Nunito',system-ui,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(165deg,var(--sky1),var(--sky2) 60%,#FAF3EC);
+  min-height:100vh;
+}
+h1,h2,h3,.display{font-family:'Baloo 2','Nunito',system-ui,sans-serif;}
+#app{max-width:520px; margin:0 auto; padding:16px 16px 40px;}
+.screen{display:none; animation:fadeIn .4s ease;}
+.screen.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+.topbar{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; min-height:44px;}
+.back-btn{background:var(--card); border:none; border-radius:999px; padding:9px 16px; font:700 15px 'Nunito'; color:var(--ink); box-shadow:var(--shadow); cursor:pointer;}
+.stars-bar{font:800 16px 'Baloo 2'; background:var(--card); border-radius:999px; padding:8px 14px; box-shadow:var(--shadow); color:var(--ink);}
+
+.btn{
+  display:inline-block; border:none; cursor:pointer;
+  background:var(--yarn); color:#fff;
+  font:800 18px 'Baloo 2'; letter-spacing:.3px;
+  padding:14px 30px; border-radius:999px;
+  box-shadow:0 5px 0 var(--yarn-dark);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--yarn-dark);}
+.btn.green{background:var(--calm); box-shadow:0 5px 0 var(--calm-dark);}
+.btn.green:active{box-shadow:0 1px 0 var(--calm-dark);}
+.btn.ghost{background:var(--card); color:var(--ink); box-shadow:var(--shadow);}
+.btn:disabled{opacity:.45; cursor:default; transform:none;}
+.btn:focus-visible,.back-btn:focus-visible,.chip:focus-visible{outline:3px solid var(--ink); outline-offset:2px;}
+
+/* ---------- intro ---------- */
+.hero{text-align:center; padding-top:10px;}
+.hero h1{font-size:34px; margin:6px 0 2px; line-height:1.1;}
+.hero .sub{color:var(--ink-soft); font-weight:700; margin:0 0 10px;}
+.bubble{
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:16px 18px; margin:14px 0; text-align:left; font-size:16.5px; line-height:1.5;
+}
+.chips{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:10px 0;}
+.chip{
+  border:3px solid transparent; background:var(--card); border-radius:18px;
+  padding:10px 14px; font:800 16px 'Baloo 2'; color:var(--ink);
+  box-shadow:var(--shadow); cursor:pointer; transition:transform .12s;
+}
+.chip.mood{font-size:30px; padding:8px 12px; line-height:1;}
+.chip.sel{border-color:var(--yarn); transform:scale(1.06);}
+.label-sm{font:800 14px 'Baloo 2'; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1px; margin:14px 0 4px;}
+
+/* ---------- menu ---------- */
+.yarn-wrap{display:flex; flex-direction:column; align-items:center; margin:4px 0 10px;}
+.yarn-caption{font:800 17px 'Baloo 2'; color:var(--ink); margin-top:2px;}
+.yarn-caption small{display:block; font:700 14px 'Nunito'; color:var(--ink-soft);}
+.cards{display:flex; flex-direction:column; gap:12px;}
+.tcard{
+  display:flex; align-items:center; gap:14px; text-align:left;
+  background:var(--card); border:none; border-radius:var(--radius);
+  padding:14px 16px; box-shadow:var(--shadow); cursor:pointer; width:100%;
+  transition:transform .12s ease;
+}
+.tcard:active{transform:scale(.98);}
+.tcard .ico{font-size:34px; width:48px; text-align:center; flex:none;}
+.tcard .tt{font:800 18px 'Baloo 2'; color:var(--ink);}
+.tcard .td{font:700 13.5px 'Nunito'; color:var(--ink-soft);}
+.tcard .done-star{margin-left:auto; font-size:24px; flex:none;}
+.tcard.done{background:#F2FAF1;}
+
+/* ---------- technique screens ---------- */
+.tech-head{text-align:center; margin-bottom:4px;}
+.tech-head h2{font-size:26px; margin:2px 0;}
+.tech-desc{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 18px; font-size:16px; line-height:1.55; margin:10px 0 14px;}
+.stage{
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:14px; text-align:center; position:relative; overflow:hidden;
+}
+.big-label{font:800 30px 'Baloo 2'; min-height:40px; letter-spacing:1px; transition:color .3s;}
+.big-label.in{color:var(--calm-dark);}
+.big-label.out{color:#5B8DD6;}
+.big-label.hold{color:var(--ink-soft);}
+.counter{font:800 15px 'Nunito'; color:var(--ink-soft); margin-top:4px; min-height:20px;}
+.center-actions{text-align:center; margin-top:16px;}
+.tip{font-size:14.5px; color:var(--ink-soft); font-weight:700; margin-top:10px; min-height:18px;}
+
+/* balloon */
+.balloon-area{height:300px; display:flex; align-items:center; justify-content:center;}
+#balloon{
+  width:90px; height:90px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #FFD9DF, var(--yarn));
+  box-shadow:inset -8px -10px 18px rgba(0,0,0,.08);
+  transition:transform 3.5s ease-in-out;
+  display:flex; align-items:center; justify-content:center; font-size:34px;
+}
+
+/* scene (senses) */
+.scene{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:6px;}
+.scene button{
+  font-size:38px; background:#F4F7FB; border:3px solid transparent; border-radius:18px;
+  padding:12px 4px; cursor:pointer; transition:transform .15s;
+}
+.scene button.found{border-color:var(--calm); background:#EAF7EE; transform:scale(1.05);}
+.scene button:disabled{opacity:.95;}
+.scene-name{font:800 20px 'Baloo 2'; min-height:28px; color:var(--calm-dark); margin-top:6px;}
+
+/* bell */
+.bell-area{padding:24px 0;}
+.bell-emoji{font-size:80px; display:inline-block; transition:transform .2s;}
+.bell-emoji.ring{animation:ring 1.4s ease;}
+@keyframes ring{0%{transform:rotate(0)}12%{transform:rotate(16deg)}28%{transform:rotate(-13deg)}45%{transform:rotate(9deg)}65%{transform:rotate(-6deg)}85%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+.sound-wave{height:10px; background:linear-gradient(90deg,var(--yarn),#FAD2D8); border-radius:99px; margin:18px 30px 8px; transform-origin:left; transition:transform .3s linear;}
+
+/* svg shared */
+svg{max-width:100%; height:auto; display:block; margin:0 auto;}
+.trace-path{fill:none; stroke:#D6DEEA; stroke-width:7; stroke-linecap:round; stroke-linejoin:round;}
+.trace-done{fill:none; stroke:var(--yarn); stroke-width:7; stroke-linecap:round; stroke-linejoin:round;}
+.part{fill:#E7EDF6; stroke:#B9C6DB; stroke-width:3; transition:fill .4s, stroke .4s;}
+.part.hot{fill:#FAD2D8; stroke:var(--yarn);}
+.part.cool{fill:#DDF2E4; stroke:var(--calm);}
+
+/* overlay */
+#overlay{
+  position:fixed; inset:0; background:rgba(51,64,90,.45); display:none;
+  align-items:center; justify-content:center; padding:20px; z-index:50;
+}
+#overlay.show{display:flex;}
+.ov-card{
+  background:var(--card); border-radius:26px; padding:24px 22px 26px; max-width:380px; width:100%;
+  text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.25); animation:pop .35s ease;
+}
+@keyframes pop{from{transform:scale(.85); opacity:0} to{transform:scale(1); opacity:1}}
+.ov-card h3{font-size:24px; margin:4px 0 6px;}
+.ov-star{font-size:46px; animation:starJump .7s ease;}
+@keyframes starJump{0%{transform:scale(0) rotate(-30deg)} 60%{transform:scale(1.25)} 100%{transform:scale(1)}}
+.ov-text{font-weight:700; color:var(--ink-soft); line-height:1.5;}
+
+/* yarn animations */
+.neat-g path{stroke:var(--yarn); stroke-width:3.4; fill:none; stroke-linecap:round;
+  stroke-dasharray:1; stroke-dashoffset:1; opacity:0;
+  transition:stroke-dashoffset 1.4s ease .15s, opacity .3s ease;}
+.neat-g.show path{stroke-dashoffset:0; opacity:1;}
+.tangle-g{transition:opacity .9s ease, transform .9s ease; transform-origin:100px 105px;}
+.tangle-g.gone{opacity:0; transform:scale(.7) rotate(12deg);}
+.tangle-g path{stroke:var(--yarn-dark); stroke-width:3.2; fill:none; stroke-linecap:round;}
+.mouth{fill:none; stroke:var(--ink); stroke-width:3; stroke-linecap:round; transition:d .5s;}
+
+/* confetti */
+.confetti{position:fixed; top:-12px; font-size:20px; z-index:60; animation:fall linear forwards; pointer-events:none;}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);}}
+
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(80px);
+  background:var(--ink); color:#fff; font:800 15px 'Nunito'; padding:12px 20px; border-radius:999px;
+  transition:transform .35s ease; z-index:70; box-shadow:var(--shadow); max-width:90vw; text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important; transition-duration:.2s !important;}
+}
+@media (max-width:380px){
+  .scene{grid-template-columns:repeat(3,1fr);}
+  .hero h1{font-size:29px;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ÚVOD -->
+  <section class="screen active" id="scr-intro">
+    <div class="hero">
+      <div id="intro-yarn"></div>
+      <h1>Klbko pokoja</h1>
+      <p class="sub">hra o všímavosti pre deti</p>
+    </div>
+    <div class="bubble">
+      Ahoj! Toto klbko je tvoja <b>myseľ</b>. Niekedy sa nám myšlienky zamotajú —
+      a vtedy pomôže <b>všímavosť</b>: zastaviť sa, dýchať a vnímať, čo sa deje teraz.
+      Každé cvičenie, ktoré zvládneš, kúsok klbka <b>rozmotá</b>. 🧶
+    </div>
+    <p class="label-sm">Ako sa teraz cítiš?</p>
+    <div class="chips" id="mood-start">
+      <button class="chip mood" data-mood="😟" aria-label="ustarostene">😟</button>
+      <button class="chip mood" data-mood="😐" aria-label="neutrálne">😐</button>
+      <button class="chip mood" data-mood="🙂" aria-label="dobre">🙂</button>
+      <button class="chip mood" data-mood="😄" aria-label="výborne">😄</button>
+    </div>
+    <p class="label-sm">Koľko máš rokov?</p>
+    <div class="chips" id="age-pick">
+      <button class="chip" data-age="mladsi">6 – 8 rokov</button>
+      <button class="chip" data-age="starsi">9 – 12 rokov</button>
+    </div>
+    <div class="center-actions">
+      <button class="btn" id="btn-start" disabled>Poďme rozmotávať!</button>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section class="screen" id="scr-menu">
+    <div class="topbar">
+      <span class="stars-bar" id="stars-bar">⭐ 0 / 5</span>
+      <button class="back-btn" id="btn-restart" title="Začať odznova">↺ Odznova</button>
+    </div>
+    <div class="yarn-wrap">
+      <div id="menu-yarn"></div>
+      <div class="yarn-caption" id="yarn-caption"></div>
+    </div>
+    <div class="cards" id="tech-cards"></div>
+  </section>
+
+  <!-- 1: DÝCHANIE RUKY -->
+  <section class="screen" id="scr-ruka">
+    <div class="topbar"><button class="back-btn" data-back>← Späť</button><span class="stars-bar stars-mini">⭐</span></div>
+    <div class="tech-head"><h2>🖐️ Dýchanie ruky</h2></div>
+    <div class="tech-desc">
+      Polož ruku pred seba a ukazovákom pomaly sleduj okraje svojich prstov —
+      keď ideš <b>hore, nadýchni sa</b>, keď ideš <b>dole, vydýchni</b>.
+      Päť prstov, päť nádychov, päť výdychov — a si pokojnejší.
+      <span class="starsi-only" hidden><br><br>💡 Pre starších: skús pri každom výdychu na chvíľu zavrieť oči a vnímať, ako sa ramená uvoľnia.</span>
+    </div>
+    <div class="stage">
+      <div class="big-label" id="ruka-label">&nbsp;</div>
+      <svg id="ruka-svg" viewBox="0 0 300 320" width="300" aria-label="Silueta ruky s pohybujúcim sa krúžkom">
+        <path id="ruka-outline" class="trace-path" d=""/>
+        <path id="ruka-progress" class="trace-done" d=""/>
+        <circle id="ruka-dot" r="9" fill="var(--yarn)" stroke="#fff" stroke-width="3" opacity="0"/>
+      </svg>
+      <div class="counter" id="ruka-counter">Sleduj krúžok prstom na svojej ruke</div>
+    </div>
+    <div class="center-actions"><button class="btn" id="ruka-start">Začať dýchať</button></div>
+  </section>
+
+  <!-- 2: BALÓNIK V BRUŠKU -->
+  <section class="screen" id="scr-balon">
+    <div class="topbar"><button class="back-btn" data-back>← Späť</button><span class="stars-bar stars-mini">⭐</span></div>
+    <div class="tech-head"><h2>🎈 Balónik v brušku</h2></div>
+    <div class="tech-desc">
+      Polož si ruky na bruško. Predstav si, že máš v brušku balónik.
+      Pri <b>nádychu</b> nosom sa balónik <b>nafukuje</b>, pri <b>výdychu</b> ústami
+      sa pomaly <b>vyfukuje</b>. Dýchaj presne s balónikom na obrazovke.
+    </div>
+    <div class="stage">
+      <div class="big-label" id="balon-label">&nbsp;</div>
+      <div class="balloon-area"><div id="balloon">🎈</div></div>
+      <div class="counter" id="balon-counter"></div>
+    </div>
+    <div class="center-actions"><button class="btn" id="balon-start">Nafúknuť balónik</button></div>
+  </section>
+
+  <!-- 3: ZVEDAVÉ OČI -->
+  <section class="screen" id="scr-oci">
+    <div class="topbar"><button class="back-btn" data-back>← Späť</button><span class="stars-bar stars-mini">⭐</span></div>
+    <div class="tech-head"><h2>👀 Zvedavé oči</h2></div>
+    <div class="tech-desc">
+      Keď je v hlave zmätok, pomôže poriadne sa <b>poobzerať okolo seba</b>.
+      Ťukni na <b>5 vecí</b> v izbe, ktoré ťa zaujmú. Pri každej sa na chvíľku zastav
+      a dobre si ju prezri — akú má farbu, tvar, aká asi je na dotyk?
+    </div>
+    <div class="stage">
+      <div class="scene" id="oci-scene"></div>
+      <div class="scene-name" id="oci-name">&nbsp;</div>
+      <div class="counter" id="oci-counter">Nájdené: 0 / 5</div>
+    </div>
+    <div class="tip" id="oci-tip"></div>
+  </section>
+
+  <!-- 4: ZVONČEK TICHA -->
+  <section class="screen" id="scr-zvon">
+    <div class="topbar"><button class="back-btn" data-back>← Späť</button><span class="stars-bar stars-mini">⭐</span></div>
+    <div class="tech-head"><h2>🔔 Zvonček ticha</h2></div>
+    <div class="tech-desc">
+      Zazvoň na zvonček a <b>počúvaj</b> ušami sovy 🦉 — sleduj tón, ako pomaly slabne,
+      až celkom zmizne. Keď už nepočuješ nič, stlač tlačidlo a chvíľku si
+      <b>vychutnaj ticho</b>.
+    </div>
+    <div class="stage">
+      <div class="bell-area">
+        <span class="bell-emoji" id="bell-emoji">🔔</span>
+        <div class="sound-wave" id="sound-wave" style="transform:scaleX(0)"></div>
+        <div class="counter" id="zvon-counter"></div>
+      </div>
+    </div>
+    <div class="center-actions">
+      <button class="btn" id="zvon-ring">Zazvoniť 🔔</button>
+      <button class="btn green" id="zvon-quiet" hidden>Už je ticho 🤫</button>
+    </div>
+    <div class="tip" id="zvon-tip">Ak nemáš zapnutý zvuk, sleduj ružovú čiaru — keď zmizne, tón dohral.</div>
+  </section>
+
+  <!-- 5: SOCHA POKOJA -->
+  <section class="screen" id="scr-socha">
+    <div class="topbar"><button class="back-btn" data-back>← Späť</button><span class="stars-bar stars-mini">⭐</span></div>
+    <div class="tech-head"><h2>🗿 Socha pokoja</h2></div>
+    <div class="tech-desc">
+      Telo nám vie pomôcť upokojiť hlavu. Postupne <b>spevni</b> (stlač, stiahni)
+      časť tela, ktorá svieti na obrázku, chvíľu vydrž — a potom ju úplne
+      <b>uvoľni</b> ako mäkkú handrovú bábiku.
+    </div>
+    <div class="stage">
+      <div class="big-label" id="socha-label">&nbsp;</div>
+      <svg id="socha-svg" viewBox="0 0 240 330" width="220" aria-label="Postavička s vyznačenými časťami tela">
+        <circle id="p-hlava" class="part" cx="120" cy="48" r="30"/>
+        <path id="p-ruky" class="part" d="M70 105 Q50 150 58 195 M170 105 Q190 150 182 195" style="fill:none" stroke-width="16" stroke-linecap="round"/>
+        <rect id="p-trup" class="part" x="85" y="85" width="70" height="115" rx="30"/>
+        <circle id="p-brucho" class="part" cx="120" cy="165" r="22"/>
+        <path id="p-nohy" class="part" d="M103 205 L100 285 M137 205 L140 285" style="fill:none" stroke-width="18" stroke-linecap="round"/>
+        <ellipse id="p-chodidla" class="part" cx="96" cy="298" rx="18" ry="10"/>
+        <ellipse id="p-chodidla2" class="part" cx="144" cy="298" rx="18" ry="10"/>
+        <circle cx="110" cy="44" r="3.5" fill="var(--ink)"/>
+        <circle cx="130" cy="44" r="3.5" fill="var(--ink)"/>
+        <path d="M111 58 Q120 65 129 58" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <div class="counter" id="socha-counter"></div>
+    </div>
+    <div class="center-actions"><button class="btn" id="socha-start">Stať sa sochou</button></div>
+  </section>
+
+  <!-- FINÁLE -->
+  <section class="screen" id="scr-final">
+    <div class="hero">
+      <h1>Hotovo! 🌟</h1>
+      <div id="final-yarn"></div>
+      <p class="sub">Klbko tvojej mysle je krásne navinuté.</p>
+    </div>
+    <div class="bubble" id="final-text"></div>
+    <p class="label-sm">A ako sa cítiš teraz?</p>
+    <div class="chips" id="mood-end">
+      <button class="chip mood" data-mood="😟">😟</button>
+      <button class="chip mood" data-mood="😐">😐</button>
+      <button class="chip mood" data-mood="🙂">🙂</button>
+      <button class="chip mood" data-mood="😄">😄</button>
+    </div>
+    <div class="bubble" id="mood-compare" hidden></div>
+    <div class="center-actions">
+      <button class="btn" id="btn-again">Zahrať si znova</button>
+    </div>
+  </section>
+</div>
+
+<!-- POCHVALA -->
+<div id="overlay">
+  <div class="ov-card">
+    <div class="ov-star">⭐</div>
+    <h3 id="ov-title"></h3>
+    <p class="ov-text" id="ov-text"></p>
+    <button class="btn green" id="ov-btn">Pokračovať</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ STAV ============ */
+const state = {
+  age: null,            // 'mladsi' | 'starsi'
+  moodStart: null,
+  moodEnd: null,
+  done: new Set(),      // id techník
+  progress: 0           // 0..5
+};
+const TECHS = [
+  {id:'ruka',  ico:'🖐️', title:'Dýchanie ruky',     desc:'Dýchaj podľa prstov svojej ruky', scr:'scr-ruka'},
+  {id:'balon', ico:'🎈', title:'Balónik v brušku',  desc:'Pomalé dýchanie do bruška',        scr:'scr-balon'},
+  {id:'oci',   ico:'👀', title:'Zvedavé oči',        desc:'Nájdi a poriadne si prezri 5 vecí', scr:'scr-oci'},
+  {id:'zvon',  ico:'🔔', title:'Zvonček ticha',      desc:'Počúvaj tón, kým celkom nezmizne', scr:'scr-zvon'},
+  {id:'socha', ico:'🗿', title:'Socha pokoja',       desc:'Spevni a uvoľni celé telo',        scr:'scr-socha'}
+];
+const PRAISES = [
+  {t:'Výborne!', x:'Tvoje dýchanie rozmotalo poriadny uzlík. Cítiš, aké je telo pokojnejšie?'},
+  {t:'Šikovne!', x:'Všimol/a si si veci okolo seba — a myšlienky sa hneď upratali.'},
+  {t:'Paráda!',  x:'Ďalší kúsok vlny je krásne navinutý. Tvoja myseľ ti ďakuje.'},
+  {t:'Super!',   x:'Pokoj sa dá natrénovať — a tebe to ide skvele.'},
+  {t:'Krása!',   x:'Klbko je už takmer rozmotané. Pamätáš si, ktoré cvičenie ti bolo najpríjemnejšie?'}
+];
+const $ = id => document.getElementById(id);
+const show = scr => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(scr).classList.add('active');
+  window.scrollTo({top:0});
+};
+function toast(msg){
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ============ ZVUK ============ */
+let actx=null;
+function audio(){ try{ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); return actx; }catch(e){ return null; } }
+function bell(dur){
+  const c=audio(); if(!c) return;
+  const g=c.createGain(); g.connect(c.destination);
+  g.gain.setValueAtTime(0.0001,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.4,c.currentTime+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  [660,1320,1980].forEach((f,i)=>{
+    const o=c.createOscillator(); o.type='sine'; o.frequency.value=f;
+    const og=c.createGain(); og.gain.value=[1,.35,.12][i];
+    o.connect(og); og.connect(g); o.start(); o.stop(c.currentTime+dur+0.1);
+  });
+}
+function chime(){
+  const c=audio(); if(!c) return;
+  [[523,0],[659,0.12],[784,0.24]].forEach(([f,d])=>{
+    const o=c.createOscillator(), g=c.createGain();
+    o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,c.currentTime+d);
+    g.gain.exponentialRampToValueAtTime(0.25,c.currentTime+d+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+d+0.5);
+    o.connect(g); g.connect(c.destination); o.start(c.currentTime+d); o.stop(c.currentTime+d+0.6);
+  });
+}
+
+/* ============ KLBKO (SVG) ============ */
+function yarnSVG(idPrefix, size){
+  const NEAT_ANGLES=[-54,-27,0,26,53];
+  const TANGLES=[
+    'M58 70 C 18 28, 108 6, 132 52 C 146 86, 72 96, 58 70 M40 118 C 8 138, 14 172, 46 162',
+    'M150 142 C 196 168, 188 78, 150 58 C 128 46, 118 92, 150 142',
+    'M82 162 C 50 198, 132 204, 122 150 C 117 127, 96 140, 82 162',
+    'M96 42 C 96 4, 162 14, 150 50 C 142 72, 110 64, 96 42',
+    'M55 92 C 122 58, 78 152, 152 112 C 168 103, 162 86, 148 84'
+  ];
+  let neat='';
+  NEAT_ANGLES.forEach((a,i)=>{
+    let paths='';
+    [20,34,48].forEach(k=>{
+      paths+=`<path pathLength="1" d="M44 105 Q 100 ${105-k} 156 105"/>`;
+    });
+    neat+=`<g class="neat-g" id="${idPrefix}-neat-${i}" clip-path="url(#${idPrefix}-clip)" transform="rotate(${a} 100 105)">${paths}</g>`;
+  });
+  let tangle='';
+  TANGLES.forEach((d,i)=>{ tangle+=`<g class="tangle-g" id="${idPrefix}-tang-${i}"><path d="${d}"/></g>`; });
+  return `
+  <svg viewBox="0 0 200 215" width="${size}" aria-label="Klbko vlny — myseľ">
+    <defs><clipPath id="${idPrefix}-clip"><circle cx="100" cy="105" r="61"/></clipPath></defs>
+    <circle cx="100" cy="105" r="62" fill="var(--wool)" stroke="var(--wool-line)" stroke-width="3"/>
+    <g opacity="0.22" stroke="var(--yarn)" stroke-width="2.5" fill="none">
+      <path d="M44 105 Q 100 70 156 105"/><path d="M44 105 Q 100 140 156 105"/>
+    </g>
+    ${neat}
+    ${tangle}
+    <path d="M150 158 C 168 176, 178 184, 192 188" stroke="var(--yarn-dark)" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <g id="${idPrefix}-face">
+      <g id="${idPrefix}-eyes-dizzy" stroke="var(--ink)" stroke-width="3" stroke-linecap="round">
+        <path d="M84 98 l10 10 M94 98 l-10 10"/><path d="M106 98 l10 10 M116 98 l-10 10"/>
+      </g>
+      <g id="${idPrefix}-eyes-ok" hidden>
+        <circle cx="89" cy="102" r="4.5" fill="var(--ink)"/><circle cx="111" cy="102" r="4.5" fill="var(--ink)"/>
+      </g>
+      <path class="mouth" id="${idPrefix}-mouth" d="M88 120 Q 94 114 100 120 Q 106 126 112 120"/>
+    </g>
+  </svg>`;
+}
+const MOUTHS=[
+  'M88 120 Q 94 114 100 120 Q 106 126 112 120', // zamotaný — vlnka
+  'M88 122 Q 100 118 112 122',
+  'M88 121 Q 100 124 112 121',
+  'M87 119 Q 100 129 113 119',
+  'M86 118 Q 100 133 114 118',
+  'M84 116 Q 100 138 116 116'                    // veľký úsmev
+];
+function renderYarn(container, idPrefix, size, progress, animateLast){
+  const el=$(container);
+  if(!el.dataset.built){ el.innerHTML=yarnSVG(idPrefix,size); el.dataset.built='1'; }
+  for(let i=0;i<5;i++){
+    const tg=$(idPrefix+'-tang-'+i), ng=$(idPrefix+'-neat-'+i);
+    // zamotané chumáče miznú od konca, navinuté pásy pribúdajú od začiatku
+    const tangGone = (4-i) < progress;
+    if(animateLast){
+      // necháme prehliadač urobiť prechod
+      requestAnimationFrame(()=>{ tg.classList.toggle('gone',tangGone); ng.classList.toggle('show', i<progress); });
+    }else{
+      tg.classList.toggle('gone',tangGone);
+      ng.classList.toggle('show', i<progress);
+      if(i<progress) ng.querySelectorAll('path').forEach(p=>p.style.transition='none');
+    }
+  }
+  $(idPrefix+'-mouth').setAttribute('d', MOUTHS[progress]);
+  $(idPrefix+'-eyes-dizzy').hidden = progress>0;
+  $(idPrefix+'-eyes-ok').hidden = progress===0;
+}
+
+/* ============ ÚVOD ============ */
+renderYarn('intro-yarn','iy',150,0,false);
+function pickChip(groupId, attr, cb){
+  $(groupId).addEventListener('click',e=>{
+    const b=e.target.closest('.chip'); if(!b) return;
+    $(groupId).querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+    b.classList.add('sel'); cb(b.dataset[attr]);
+  });
+}
+pickChip('mood-start','mood',v=>{ state.moodStart=v; checkStart(); });
+pickChip('age-pick','age',v=>{ state.age=v; checkStart(); });
+function checkStart(){ $('btn-start').disabled = !(state.moodStart && state.age); }
+$('btn-start').addEventListener('click',()=>{
+  document.querySelectorAll('.starsi-only').forEach(el=>el.hidden = state.age!=='starsi');
+  buildMenu(); show('scr-menu');
+});
+
+/* ============ MENU ============ */
+const YARN_CAPTIONS=[
+  ['Klbko je celkom zamotané…','Vyber si cvičenie a začni rozmotávať.'],
+  ['Prvý uzlík je preč!','Klbko sa už trochu usmieva.'],
+  ['Ide ti to!','Vlna sa pekne navíja.'],
+  ['Viac než polovica!','Myseľ je čoraz pokojnejšia.'],
+  ['Už len jeden uzlík!','Cítiš ten rozdiel?'],
+  ['Krásne navinuté klbko!','Tvoja myseľ žiari pokojom.']
+];
+function buildMenu(animate){
+  renderYarn('menu-yarn','my',190,state.progress,animate);
+  const cap=YARN_CAPTIONS[state.progress];
+  $('yarn-caption').innerHTML = cap[0]+'<small>'+cap[1]+'</small>';
+  $('stars-bar').textContent = '⭐ '+state.progress+' / 5';
+  const wrap=$('tech-cards'); wrap.innerHTML='';
+  TECHS.forEach(t=>{
+    const done=state.done.has(t.id);
+    const b=document.createElement('button');
+    b.className='tcard'+(done?' done':'');
+    b.innerHTML=`<span class="ico">${t.ico}</span>
+      <span><span class="tt">${t.title}</span><br><span class="td">${t.desc}</span></span>
+      <span class="done-star">${done?'⭐':'▶️'}</span>`;
+    b.addEventListener('click',()=>{ if(done){ toast('Toto cvičenie už máš hotové — ale pokojne si ho zopakuj!'); } openTech(t); });
+    wrap.appendChild(b);
+  });
+}
+$('btn-restart').addEventListener('click',()=>{
+  state.done.clear(); state.progress=0; state.moodEnd=null;
+  document.querySelectorAll('#mood-end .chip').forEach(c=>c.classList.remove('sel'));
+  $('mood-compare').hidden=true;
+  buildMenu(); toast('Začíname odznova — klbko sa zamotalo. 😉');
+});
+document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>{ stopAll(); buildMenu(); show('scr-menu'); }));
+
+let cleanups=[];
+function stopAll(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups=[]; }
+function openTech(t){
+  stopAll();
+  show(t.scr);
+  document.querySelectorAll('.stars-mini').forEach(s=>s.textContent='⭐ '+state.progress+'/5');
+  INIT[t.id]();
+}
+
+/* ============ DOKONČENIE TECHNIKY ============ */
+function completeTech(id){
+  const first=!state.done.has(id);
+  if(first){ state.done.add(id); state.progress=state.done.size; }
+  chime();
+  const p=PRAISES[(state.progress-1+PRAISES.length)%PRAISES.length];
+  $('ov-title').textContent=p.t;
+  $('ov-text').textContent= first ? p.x : 'Opakovanie je super tréning pokoja! Hviezdičku za toto cvičenie už máš.';
+  $('overlay').classList.add('show');
+  $('ov-btn').onclick=()=>{
+    $('overlay').classList.remove('show');
+    if(state.progress>=5){ finale(); }
+    else{ buildMenu(true); show('scr-menu'); }
+  };
+}
+
+/* ============ 1: DÝCHANIE RUKY ============ */
+function buildHandPath(){
+  const pts=[[68,298],[58,250],[42,210],[27,186],[36,175],[54,198],[72,222],[82,168],[90,108],[97,85],[107,84],[113,112],[119,160],[129,108],[137,64],[147,63],[155,112],[161,158],[173,116],[185,81],[195,84],[201,124],[209,162],[223,132],[237,117],[247,124],[250,158],[254,212],[256,260],[252,298]];
+  // Catmull-Rom → kubické Bézierove krivky (hladká silueta)
+  let d='M'+pts[0][0]+' '+pts[0][1];
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
+    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
+    const c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+    d+=` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0]} ${p2[1]}`;
+  }
+  return d;
+}
+function initRuka(){
+  const d=buildHandPath();
+  $('ruka-outline').setAttribute('d',d);
+  const prog=$('ruka-progress'); prog.setAttribute('d',d);
+  const L=$('ruka-outline').getTotalLength();
+  prog.style.strokeDasharray=L; prog.style.strokeDashoffset=L;
+  $('ruka-dot').setAttribute('opacity','0');
+  $('ruka-label').textContent='\u00A0'; $('ruka-label').className='big-label';
+  $('ruka-counter').textContent='Sleduj krúžok aj prstom na svojej skutočnej ruke';
+  $('ruka-start').hidden=false; $('ruka-start').disabled=false;
+  $('ruka-start').onclick=()=>{
+    $('ruka-start').disabled=true;
+    runRuka(L,prog);
+  };
+}
+function runRuka(L,prog){
+  const path=$('ruka-outline'), dot=$('ruka-dot');
+  const segDur = state.age==='starsi' ? 3400 : 2600;  // diferenciácia: starší dýchajú pomalšie
+  const total = segDur*10;
+  let start=null, lastY=null, dir=null, breaths=0, raf;
+  dot.setAttribute('opacity','1');
+  function frame(ts){
+    if(!start) start=ts;
+    const t=Math.min(1,(ts-start)/total);
+    const s=t*L;
+    const p=path.getPointAtLength(s);
+    dot.setAttribute('cx',p.x); dot.setAttribute('cy',p.y);
+    prog.style.strokeDashoffset = L - s;
+    if(lastY!==null){
+      const dy=p.y-lastY;
+      if(dy < -0.08 && dir!=='up'){ dir='up'; breaths++; setRukaLabel('NÁDYCH','in'); $('ruka-counter').textContent='Nádych '+Math.min(breaths,5)+' z 5 — pomaly nosom'; }
+      else if(dy > 0.08 && dir!=='down'){ dir='down'; setRukaLabel('VÝDYCH','out'); $('ruka-counter').textContent='Výdych '+Math.min(breaths,5)+' z 5 — pomaly ústami'; }
+    }
+    lastY=p.y;
+    if(t<1){ raf=requestAnimationFrame(frame); }
+    else{
+      $('ruka-label').textContent='Krásne 💚'; $('ruka-label').className='big-label';
+      setTimeout(()=>completeTech('ruka'),700);
+    }
+  }
+  raf=requestAnimationFrame(frame);
+  cleanups.push(()=>cancelAnimationFrame(raf));
+}
+function setRukaLabel(txt,cls){ const l=$('ruka-label'); l.textContent=txt; l.className='big-label '+cls; }
+
+/* ============ 2: BALÓNIK ============ */
+function initBalon(){
+  const b=$('balloon');
+  b.style.transition='none'; b.style.transform='scale(1)';
+  $('balon-label').textContent='\u00A0'; $('balon-label').className='big-label';
+  $('balon-counter').textContent='';
+  $('balon-start').hidden=false; $('balon-start').disabled=false;
+  $('balon-start').onclick=()=>{ $('balon-start').disabled=true; runBalon(); };
+}
+function runBalon(){
+  const cycles = state.age==='starsi' ? 4 : 3;
+  const IN = state.age==='starsi'?4200:3500, HOLD=1800, OUT=state.age==='starsi'?5200:4200, REST=900;
+  const b=$('balloon'), lab=$('balon-label'), cnt=$('balon-counter');
+  let c=0; const timers=[];
+  function phase(txt,cls,scale,dur,next){
+    lab.textContent=txt; lab.className='big-label '+cls;
+    b.style.transition='transform '+(dur/1000)+'s ease-in-out';
+    b.style.transform='scale('+scale+')';
+    timers.push(setTimeout(next,dur));
+  }
+  function cycle(){
+    c++;
+    if(c>cycles){
+      lab.textContent='Bruško je pokojné 💚'; lab.className='big-label';
+      timers.push(setTimeout(()=>completeTech('balon'),900));
+      return;
+    }
+    cnt.textContent='Dych '+c+' z '+cycles;
+    phase('NÁDYCH nosom… 👃','in',2.4,IN,()=>
+      phase('zadrž…','hold',2.4,HOLD,()=>
+        phase('VÝDYCH ústami… 👄','out',1,OUT,()=>
+          timers.push(setTimeout(cycle,REST)))));
+  }
+  cycle();
+  cleanups.push(()=>timers.forEach(clearTimeout));
+}
+
+/* ============ 3: ZVEDAVÉ OČI ============ */
+const SCENE_ITEMS=[
+  ['🪟','okno'],['🪴','kvetina'],['🧸','medvedík'],['📚','knihy'],
+  ['🕰️','hodiny'],['🛋️','gauč'],['🐈','mačka'],['🌙','mesiac'],
+  ['☕','hrnček'],['🖼️','obraz'],['🎈','balón'],['🧦','ponožky']
+];
+function initOci(){
+  const scene=$('oci-scene'); scene.innerHTML='';
+  $('oci-name').textContent='\u00A0';
+  $('oci-counter').textContent='Nájdené: 0 / 5';
+  $('oci-tip').textContent='';
+  let found=0, locked=false; const timers=[];
+  SCENE_ITEMS.forEach(([emo,name])=>{
+    const b=document.createElement('button');
+    b.textContent=emo; b.setAttribute('aria-label',name);
+    b.addEventListener('click',()=>{
+      if(locked || b.classList.contains('found') || found>=5) return;
+      locked=true; b.classList.add('found'); found++;
+      $('oci-name').textContent=emo+' '+name;
+      $('oci-counter').textContent='Nájdené: '+found+' / 5 — zastav sa a prezri si: '+name;
+      timers.push(setTimeout(()=>{
+        locked=false;
+        if(found>=5){
+          if(state.age==='starsi'){
+            $('oci-tip').textContent='💡 Bonus pre starších: teraz v duchu nájdi 4 zvuky, ktoré počuješ, 3 veci, ktorých sa dotýkaš, 2 vône a 1 chuť.';
+            timers.push(setTimeout(()=>completeTech('oci'),5500));
+          }else{
+            timers.push(setTimeout(()=>completeTech('oci'),700));
+          }
+        }
+      },1500));
+    });
+    scene.appendChild(b);
+  });
+  cleanups.push(()=>timers.forEach(clearTimeout));
+}
+
+/* ============ 4: ZVONČEK TICHA ============ */
+function initZvon(){
+  const need = state.age==='starsi' ? 2 : 1;   // diferenciácia: starší počúvajú dvakrát
+  let done=0; const timers=[];
+  $('zvon-counter').textContent = need>1 ? 'Zvonenie 1 z '+need : '';
+  $('zvon-ring').hidden=false; $('zvon-ring').disabled=false;
+  $('zvon-quiet').hidden=true;
+  $('sound-wave').style.transform='scaleX(0)';
+  $('zvon-ring').onclick=()=>{
+    const dur = state.age==='starsi' ? 12 : 8;
+    $('zvon-ring').disabled=true;
+    $('bell-emoji').classList.remove('ring'); void $('bell-emoji').offsetWidth;
+    $('bell-emoji').classList.add('ring');
+    bell(dur);
+    const wave=$('sound-wave'); wave.style.transition='none'; wave.style.transform='scaleX(1)';
+    requestAnimationFrame(()=>{ wave.style.transition='transform '+dur+'s linear'; wave.style.transform='scaleX(0)'; });
+    $('zvon-counter').textContent='Počúvaj… 🦉';
+    timers.push(setTimeout(()=>{
+      $('zvon-quiet').hidden=false;
+      $('zvon-counter').textContent='Už je tón preč?';
+    }, dur*0.75*1000));
+  };
+  $('zvon-quiet').onclick=()=>{
+    $('zvon-quiet').hidden=true;
+    done++;
+    let s=5;
+    $('zvon-counter').textContent='Vychutnaj si ticho… '+s;
+    const iv=setInterval(()=>{
+      s--;
+      if(s>0){ $('zvon-counter').textContent='Vychutnaj si ticho… '+s; }
+      else{
+        clearInterval(iv);
+        if(done>=need){ $('zvon-counter').textContent='Aké príjemné ticho 💚'; timers.push(setTimeout(()=>completeTech('zvon'),800)); }
+        else{ $('zvon-counter').textContent='Zvonenie '+(done+1)+' z '+need; $('zvon-ring').disabled=false; }
+      }
+    },1000);
+    timers.push(iv);
+    cleanups.push(()=>clearInterval(iv));
+  };
+  cleanups.push(()=>timers.forEach(t=>{clearTimeout(t); clearInterval(t);}));
+}
+
+/* ============ 5: SOCHA POKOJA ============ */
+const SOCHA_STEPS=[
+  {parts:['p-chodidla','p-chodidla2'], name:'chodidlá', tip:'zatlač chodidlá do zeme'},
+  {parts:['p-nohy'], name:'nohy', tip:'spevni stehná a lýtka'},
+  {parts:['p-brucho'], name:'bruško', tip:'stiahni bruško'},
+  {parts:['p-ruky'], name:'ruky a ramená', tip:'zatni päste a pokrč ramená'},
+  {parts:['p-hlava'], name:'tvár', tip:'zažmúr oči a nakrč nos'}
+];
+function initSocha(){
+  document.querySelectorAll('#socha-svg .part').forEach(p=>p.classList.remove('hot','cool'));
+  $('socha-label').textContent='\u00A0'; $('socha-label').className='big-label';
+  $('socha-counter').textContent='';
+  $('socha-start').hidden=false; $('socha-start').disabled=false;
+  $('socha-start').onclick=()=>{ $('socha-start').disabled=true; runSocha(); };
+}
+function runSocha(){
+  const steps = state.age==='starsi' ? SOCHA_STEPS : SOCHA_STEPS.slice(0,4); // mladší: 4 časti
+  const TENSE = state.age==='starsi'?3500:3000, RELAX=4000;
+  const lab=$('socha-label'), cnt=$('socha-counter'); const timers=[];
+  let i=0;
+  function step(){
+    if(i>0) steps[i-1] && steps[i-1].parts.forEach(id=>$(id).classList.replace('hot','cool'));
+    if(i>=steps.length){
+      lab.textContent='Celé telo je uvoľnené 💚'; lab.className='big-label';
+      timers.push(setTimeout(()=>completeTech('socha'),1000));
+      return;
+    }
+    const st=steps[i];
+    st.parts.forEach(id=>$(id).classList.add('hot'));
+    lab.textContent='SPEVNI: '+st.name; lab.className='big-label in';
+    cnt.textContent='('+st.tip+') a drž…';
+    timers.push(setTimeout(()=>{
+      st.parts.forEach(id=>{ $(id).classList.remove('hot'); $(id).classList.add('cool'); });
+      lab.textContent='UVOĽNI: '+st.name; lab.className='big-label out';
+      cnt.textContent='pusti všetko, ako mäkká bábika…';
+      timers.push(setTimeout(()=>{ i++; step(); },RELAX));
+    },TENSE));
+  }
+  step();
+  cleanups.push(()=>timers.forEach(clearTimeout));
+}
+
+const INIT={ruka:initRuka, balon:initBalon, oci:initOci, zvon:initZvon, socha:initSocha};
+
+/* ============ FINÁLE ============ */
+function finale(){
+  show('scr-final');
+  renderYarn('final-yarn','fy',210,5,true);
+  $('final-text').innerHTML =
+    'Rozmotal/a si všetkých <b>5 uzlíkov</b>! 🧶⭐⭐⭐⭐⭐<br><br>'+
+    'Zapamätaj si: keď sa ti myšlienky niekedy zamotajú, môžeš ktorékoľvek z týchto cvičení '+
+    'urobiť <b>aj bez počítača</b> — stačí tvoja ruka, dych, oči a uši.';
+  confettiBurst();
+}
+$('mood-end').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  document.querySelectorAll('#mood-end .chip').forEach(c=>c.classList.remove('sel'));
+  b.classList.add('sel'); state.moodEnd=b.dataset.mood;
+  const order=['😟','😐','🙂','😄'];
+  const diff=order.indexOf(state.moodEnd)-order.indexOf(state.moodStart);
+  const box=$('mood-compare'); box.hidden=false;
+  if(diff>0) box.innerHTML='Predtým '+state.moodStart+' → teraz '+state.moodEnd+'. Vidíš? <b>Všímavosť naozaj funguje.</b> 💚';
+  else if(diff===0) box.innerHTML='Cítiš sa rovnako '+state.moodEnd+' — aj to je v poriadku. Pokoj je tréning a každé cvičenie sa počíta.';
+  else box.innerHTML='Niekedy sa pocity menia pomaly — a to je úplne v poriadku. Skús si zajtra zopakovať cvičenie, ktoré ti bolo najpríjemnejšie. 💛';
+});
+$('btn-again').addEventListener('click',()=>{
+  state.done.clear(); state.progress=0; state.moodEnd=null;
+  document.querySelectorAll('#mood-end .chip').forEach(c=>c.classList.remove('sel'));
+  $('mood-compare').hidden=true;
+  buildMenu(); show('scr-menu');
+});
+function confettiBurst(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const emos=['🧶','⭐','💚','✨','🎈'];
+  for(let i=0;i<26;i++){
+    const s=document.createElement('span');
+    s.className='confetti'; s.textContent=emos[i%emos.length];
+    s.style.left=(Math.random()*100)+'vw';
+    s.style.animationDuration=(2.6+Math.random()*2.4)+'s';
+    s.style.animationDelay=(Math.random()*0.8)+'s';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),6500);
+  }
+}
+</script>
+</body>
+</html>
