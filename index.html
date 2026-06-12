@@ -241,8 +241,9 @@ svg{max-width:100%; height:auto; display:block; margin:0 auto;}
     </div>
     <div class="stage">
       <div class="big-label" id="ruka-label">&nbsp;</div>
-      <svg id="ruka-svg" viewBox="0 0 300 320" width="300" aria-label="Silueta ruky s pohybujúcim sa krúžkom">
-        <path id="ruka-outline" class="trace-path" d=""/>
+      <svg id="ruka-svg" viewBox="0 0 280 320" width="280" aria-label="Silueta ruky s pohybujúcim sa krúžkom">
+        <path id="ruka-fill" d="" style="fill:#FFF3EC;stroke:none"/>
+        <path id="ruka-outline" class="trace-path" d="" style="fill:none;stroke:#D6DEEA;stroke-width:6"/>
         <path id="ruka-progress" class="trace-done" d=""/>
         <circle id="ruka-dot" r="9" fill="var(--yarn)" stroke="#fff" stroke-width="3" opacity="0"/>
       </svg>
@@ -386,13 +387,13 @@ const TECHS = [
   {id:'zvon',  ico:'🔔', title:'Zvonček ticha',      desc:'Počúvaj tón, kým celkom nezmizne', scr:'scr-zvon'},
   {id:'socha', ico:'🗿', title:'Socha pokoja',       desc:'Spevni a uvoľni celé telo',        scr:'scr-socha'}
 ];
-const PRAISES = [
-  {t:'Výborne!', x:'Tvoje dýchanie rozmotalo poriadny uzlík. Cítiš, aké je telo pokojnejšie?'},
-  {t:'Šikovne!', x:'Všimol/a si si veci okolo seba — a myšlienky sa hneď upratali.'},
-  {t:'Paráda!',  x:'Ďalší kúsok vlny je krásne navinutý. Tvoja myseľ ti ďakuje.'},
-  {t:'Super!',   x:'Pokoj sa dá natrénovať — a tebe to ide skvele.'},
-  {t:'Krása!',   x:'Klbko je už takmer rozmotané. Pamätáš si, ktoré cvičenie ti bolo najpríjemnejšie?'}
-];
+const PRAISES = {
+  ruka: {t:'Výborne!', x:'Päť prstov, päť pokojných nádychov — tvoje dýchanie rozmotalo poriadny uzlík.'},
+  balon:{t:'Paráda!',  x:'Tvoje bruško dýchalo pokojne ako balónik — a celé telo sa s ním upokojilo.'},
+  oci:  {t:'Šikovne!', x:'Všimol/a si si veci okolo seba — a myšlienky sa hneď upratali.'},
+  zvon: {t:'Super!',   x:'Počúval/a si až do úplného ticha. Také pozorné uši upokoja celú hlavu.'},
+  socha:{t:'Krása!',   x:'Spevnil/a a uvoľnil/a si celé telo — a s ním sa uvoľnila aj myseľ.'}
+};
 const $ = id => document.getElementById(id);
 const show = scr => {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -566,7 +567,7 @@ function completeTech(id){
   const first=!state.done.has(id);
   if(first){ state.done.add(id); state.progress=state.done.size; }
   chime();
-  const p=PRAISES[(state.progress-1+PRAISES.length)%PRAISES.length];
+  const p=PRAISES[id];
   $('ov-title').textContent=p.t;
   $('ov-text').textContent= first ? p.x : 'Opakovanie je super tréning pokoja! Hviezdičku za toto cvičenie už máš.';
   $('overlay').classList.add('show');
@@ -579,21 +580,48 @@ function completeTech(id){
 
 /* ============ 1: DÝCHANIE RUKY ============ */
 function buildHandPath(){
-  const pts=[[68,298],[58,250],[42,210],[27,186],[36,175],[54,198],[72,222],[82,168],[90,108],[97,85],[107,84],[113,112],[119,160],[129,108],[137,64],[147,63],[155,112],[161,158],[173,116],[185,81],[195,84],[201,124],[209,162],[223,132],[237,117],[247,124],[250,158],[254,212],[256,260],[252,298]];
-  // Catmull-Rom → kubické Bézierove krivky (hladká silueta)
-  let d='M'+pts[0][0]+' '+pts[0][1];
-  for(let i=0;i<pts.length-1;i++){
-    const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
-    const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
-    const c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
-    d+=` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0]} ${p2[1]}`;
+  // Body obrysu pravej ruky (dlaň dopredu, palec vľavo) — krúžok ide od zápästia
+  // hore cez palec a postupne cez všetky prsty až k pravému zápästiu.
+  const T=[
+    [70,300],[66,272],[62,248],                     // ľavý bok dlane
+    [56,240],[44,226],[34,212],[29,198],            // palec — vonkajšia hrana (šikmo doľava)
+    [31,186],[44,182],[55,191],                     // zaoblená špička palca
+    [64,204],[73,220],[79,238],[82,250],            // palec — vnútorná hrana do úzkeho zárezu
+    [84,214],[84,164],[84,118],[85,104],            // ukazovák — vonkajšia strana
+    [88,92],[97,88],[105,93],[109,103],             // zaoblená špička ukazováka
+    [110,130],[111,160],[112,172],[114,178],        // úzky zárez
+    [116,168],[117,130],[117,96],[119,80],          // prostredník (najdlhší)
+    [123,70],[133,69],[141,75],[145,86],
+    [147,120],[148,155],[149,170],[151,177],        // úzky zárez
+    [153,168],[153,134],[154,104],[156,90],         // prsteník
+    [160,80],[169,79],[177,85],[181,95],
+    [183,125],[184,152],[185,168],[187,175],        // úzky zárez
+    [189,166],[189,146],[190,132],                  // malíček (kratší)
+    [193,120],[202,118],[210,124],[213,133],
+    [216,160],[218,195],[218,228],                  // pravý bok dlane
+    [212,262],[200,288],[190,300]                   // veľký oblý spodný roh
+  ];
+  // Catmull-Rom → kubické Bézierove krivky (hladký obrys)
+  function smooth(pts){
+    let d='M'+pts[0][0]+' '+pts[0][1];
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(pts.length-1,i+2)];
+      const c1=[p1[0]+(p2[0]-p0[0])/6, p1[1]+(p2[1]-p0[1])/6];
+      const c2=[p2[0]-(p3[0]-p1[0])/6, p2[1]-(p3[1]-p1[1])/6];
+      d+=` C ${c1[0].toFixed(1)} ${c1[1].toFixed(1)}, ${c2[0].toFixed(1)} ${c2[1].toFixed(1)}, ${p2[0]} ${p2[1]}`;
+    }
+    return d;
   }
-  return d;
+  const trace = smooth(T);
+  // uzavretá silueta na výplň: obrys + oblý spodok zápästia
+  const fillPath = smooth(T.concat([[160,308],[120,308],[90,304],[70,300]])) + ' Z';
+  return {trace, fillPath};
 }
 function initRuka(){
-  const d=buildHandPath();
-  $('ruka-outline').setAttribute('d',d);
-  const prog=$('ruka-progress'); prog.setAttribute('d',d);
+  const {trace, fillPath}=buildHandPath();
+  $('ruka-fill').setAttribute('d',fillPath);
+  $('ruka-outline').setAttribute('d',trace);
+  const prog=$('ruka-progress'); prog.setAttribute('d',trace);
   const L=$('ruka-outline').getTotalLength();
   prog.style.strokeDasharray=L; prog.style.strokeDashoffset=L;
   $('ruka-dot').setAttribute('opacity','0');
@@ -607,7 +635,7 @@ function initRuka(){
 }
 function runRuka(L,prog){
   const path=$('ruka-outline'), dot=$('ruka-dot');
-  const segDur = state.age==='starsi' ? 3400 : 2600;  // diferenciácia: starší dýchajú pomalšie
+  const segDur = state.age==='starsi' ? 3400 : 2600;  // pôvodné hodnoty
   const total = segDur*10;
   let start=null, lastY=null, dir=null, breaths=0, raf;
   dot.setAttribute('opacity','1');
